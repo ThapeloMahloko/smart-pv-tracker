@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 import logging
 import os
+from pathlib import Path
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -61,6 +62,19 @@ app.add_middleware(
 )
 
 
+KNOWLEDGE_FILE = Path(__file__).parent / "cut_solar_knowledge.md"
+
+
+def load_cut_knowledge_base() -> str:
+    """Load the editable CUT Sports Ground solar knowledge base markdown file."""
+    if KNOWLEDGE_FILE.exists():
+        return KNOWLEDGE_FILE.read_text(encoding="utf-8").strip()
+    return (
+        "Central University of Technology (CUT) Sports Ground Solar Installation: "
+        "Full-scale campus PV arrays on the CUT university sports ground."
+    )
+
+
 def build_cut_system_prompt(latest: Optional[SolarTelemetry]) -> str:
     """Construct the RAG-style system instruction referencing CUT sports ground arrays and live telemetry."""
     if latest:
@@ -80,12 +94,12 @@ def build_cut_system_prompt(latest: Optional[SolarTelemetry]) -> str:
             "No live telemetry has been recorded in PostgreSQL yet (awaiting ESP32 MQTT stream)."
         )
 
+    knowledge_base = load_cut_knowledge_base()
+
     return f"""You are the official AI Guide for the Central University of Technology (CUT) Smart Solar Project in Bloemfontein, Free State, South Africa.
 
 PROJECT & CAMPUS CONTEXT (RAG KNOWLEDGE BASE):
-1. Physical Demonstration Unit: Visitors are interacting with an ESP32-powered Keyestudio KS0530 dual-axis solar tracking scale model equipped with 4 photoresistors (LDRs), dual pan/tilt micro-servos, a BH1750 digital light intensity sensor, and a DHT11 temperature & humidity sensor.
-2. Full-Scale Campus Installation: This miniature dual-axis tracker demonstrates the engineering principles behind the real photovoltaic (PV) solar panels installed at the Central University of Technology (CUT) university sports ground. The sports ground solar arrays provide clean, renewable power to campus facilities, offset peak daytime grid demand, and serve as a living laboratory for CUT Engineering and Built Environment students.
-3. How Dual-Axis Tracking Works: By comparing the 4 quadrant LDR sensors (Top-Left, Top-Right, Bottom-Left, Bottom-Right), the tracker keeps the solar panel perpendicular to incoming sunlight across both azimuth (Pan) and elevation (Tilt), boosting energy yield by up to 25-35% compared to fixed-tilt installations like standard rooftop arrays, while complementing the large-scale solar infrastructure on the CUT sports ground.
+{knowledge_base}
 
 LIVE TELEMETRY SNAPSHOT FROM POSTGRESQL:
 {telemetry_context}
@@ -128,10 +142,12 @@ def chat_with_guide(request: ChatRequest, db: Session = Depends(get_db)):
 
     system_instruction = build_cut_system_prompt(latest)
 
+    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
     try:
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=model_name,
             contents=request.query,
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,

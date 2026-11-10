@@ -14,40 +14,41 @@
 #include <DHT.h>
 #include <BH1750.h>
 #include <ArduinoJson.h>
+#include "secrets.h"
 
 // ============================================================================
-// 1. NETWORK & MQTT BROKER CONFIGURATION (PLACEHOLDERS)
+// 1. NETWORK & MQTT BROKER CONFIGURATION (LOADED FROM include/secrets.h)
 // ============================================================================
-const char* WIFI_SSID         = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD     = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID         = SECRET_WIFI_SSID;
+const char* WIFI_PASSWORD     = SECRET_WIFI_PASSWORD;
 
-const char* MQTT_BROKER       = "192.168.1.100";
-const uint16_t MQTT_PORT      = 1883;
-const char* MQTT_CLIENT_ID    = "cut-ks0530-esp32-tracker";
-const char* MQTT_USERNAME     = ""; // Optional
-const char* MQTT_PASSWORD     = ""; // Optional
+const char* MQTT_BROKER       = SECRET_MQTT_BROKER;
+const uint16_t MQTT_PORT      = SECRET_MQTT_PORT;
+const char* MQTT_CLIENT_ID    = SECRET_MQTT_CLIENT_ID;
+const char* MQTT_USERNAME     = SECRET_MQTT_USERNAME;
+const char* MQTT_PASSWORD     = SECRET_MQTT_PASSWORD;
 
-const char* TOPIC_TELEMETRY   = "solar/telemetry";
-const char* TOPIC_COMMAND     = "solar/command";
+const char* TOPIC_TELEMETRY   = MQTT_TOPIC_TELEMETRY;
+const char* TOPIC_COMMAND     = MQTT_TOPIC_COMMAND;
 
 // ============================================================================
-// 2. ESP32 HARDWARE PIN MAPPINGS (KEYESTUDIO KS0530 ADAPTATION)
+// 2. ESP32 HARDWARE PIN MAPPINGS (LOADED FROM include/secrets.h)
 // ============================================================================
 // NOTE: Must use ESP32 ADC1 pins (GPIO 32-39) for LDR analog reads because
 // ADC2 pins cannot be used simultaneously with Wi-Fi.
-constexpr uint8_t PIN_LDR_TOP_LEFT     = 34; // KS0530 A0 -> ESP32 GPIO34 (ADC1_CH6)
-constexpr uint8_t PIN_LDR_TOP_RIGHT    = 35; // KS0530 A1 -> ESP32 GPIO35 (ADC1_CH7)
-constexpr uint8_t PIN_LDR_BOTTOM_LEFT  = 32; // KS0530 A2 -> ESP32 GPIO32 (ADC1_CH4)
-constexpr uint8_t PIN_LDR_BOTTOM_RIGHT = 33; // KS0530 A3 -> ESP32 GPIO33 (ADC1_CH5)
+constexpr uint8_t PIN_LDR_TOP_LEFT     = CFG_PIN_LDR_TOP_LEFT;
+constexpr uint8_t PIN_LDR_TOP_RIGHT    = CFG_PIN_LDR_TOP_RIGHT;
+constexpr uint8_t PIN_LDR_BOTTOM_LEFT  = CFG_PIN_LDR_BOTTOM_LEFT;
+constexpr uint8_t PIN_LDR_BOTTOM_RIGHT = CFG_PIN_LDR_BOTTOM_RIGHT;
 
 // Dual-Axis Micro Servos (PWM capable pins)
-constexpr uint8_t PIN_SERVO_PAN        = 18; // Horizontal / Azimuth Servo (LR)
-constexpr uint8_t PIN_SERVO_TILT       = 19; // Vertical / Elevation Servo (UD)
+constexpr uint8_t PIN_SERVO_PAN        = CFG_PIN_SERVO_PAN;
+constexpr uint8_t PIN_SERVO_TILT       = CFG_PIN_SERVO_TILT;
 
 // Environmental Sensors
-constexpr uint8_t PIN_DHT11            = 4;  // DHT11 Single-Bus Digital Pin
-constexpr uint8_t PIN_I2C_SDA          = 21; // BH1750 & LCD1602 I2C SDA
-constexpr uint8_t PIN_I2C_SCL          = 22; // BH1750 & LCD1602 I2C SCL
+constexpr uint8_t PIN_DHT11            = CFG_PIN_DHT11;
+constexpr uint8_t PIN_I2C_SDA          = CFG_PIN_I2C_SDA;
+constexpr uint8_t PIN_I2C_SCL          = CFG_PIN_I2C_SCL;
 
 // ============================================================================
 // 3. TRACKING & STATE MACHINE CONSTANTS
