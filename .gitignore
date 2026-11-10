@@ -1,0 +1,27 @@
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Firmware / PlatformIO / Arduino
+.pio/
+*.bin
+*.elf
+*.hex
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
