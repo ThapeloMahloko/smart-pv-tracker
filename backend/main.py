@@ -147,25 +147,36 @@ def chat_with_guide(request: ChatRequest, db: Session = Depends(get_db)):
 
     system_instruction = build_cut_system_prompt(latest)
 
-    model_name = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    primary_model = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+    candidate_models = [primary_model, "gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-flash"]
+    # Remove duplicates while preserving order
+    models_to_try = list(dict.fromkeys(candidate_models))
 
-    try:
-        client = genai.Client(api_key=api_key)
-        response = client.models.generate_content(
-            model=model_name,
-            contents=request.query,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.4,
-            ),
-        )
-        reply_text = response.text or "I couldn't generate a response at this moment."
-    except Exception as exc:
-        logger.error("Gemini API error: %s", exc)
+    client = genai.Client(api_key=api_key)
+    reply_text = None
+    last_error = None
+
+    for model in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=request.query,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.4,
+                ),
+            )
+            reply_text = response.text or "I couldn't generate a response at this moment."
+            break
+        except Exception as exc:
+            logger.warning("Gemini generation failed on model %s: %s", model, exc)
+            last_error = exc
+
+    if not reply_text:
         raise HTTPException(
             status_code=502,
-            detail=f"Failed to generate response from Gemini AI Guide: {exc}",
-        ) from exc
+            detail=f"Failed to generate response from Gemini AI Guide: {last_error}",
+        )
 
     return ChatResponse(
         reply=reply_text,
