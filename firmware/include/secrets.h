@@ -11,8 +11,8 @@
 // ----------------------------------------------------------------------------
 // 1. WI-FI CREDENTIALS (Must be a 2.4 GHz network for ESP32)
 // ----------------------------------------------------------------------------
-#define SECRET_WIFI_SSID          "REPLACE_WITH_YOUR_WIFI_SSID"
-#define SECRET_WIFI_PASSWORD      "REPLACE_WITH_YOUR_WIFI_PASSWORD"
+#define SECRET_WIFI_SSID          "TP"
+#define SECRET_WIFI_PASSWORD      "Th@pelo0127"
 
 // ----------------------------------------------------------------------------
 // 2. MQTT BROKER SETTINGS
@@ -31,10 +31,10 @@
 // 3. ESP32 GPIO PIN MAPPINGS (Keyestudio KS0530 Kit)
 // ----------------------------------------------------------------------------
 // 4x LDR Photoresistors (Must use ESP32 ADC1 pins GPIO 32-39 while Wi-Fi is active)
-constexpr uint8_t CFG_PIN_LDR_TOP_LEFT     = 34; // KS0530 A0 -> GPIO 34
-constexpr uint8_t CFG_PIN_LDR_TOP_RIGHT    = 35; // KS0530 A1 -> GPIO 35
-constexpr uint8_t CFG_PIN_LDR_BOTTOM_LEFT  = 32; // KS0530 A2 -> GPIO 32
-constexpr uint8_t CFG_PIN_LDR_BOTTOM_RIGHT = 33; // KS0530 A3 -> GPIO 33
+constexpr uint8_t CFG_PIN_LDR_RIGHT = 34; // KS0530 A0 -> GPIO 34
+constexpr uint8_t CFG_PIN_LDR_LEFT = 35; // KS0530 A1 -> GPIO 35
+constexpr uint8_t CFG_PIN_LDR_TOP = 32; // KS0530 A2 -> GPIO 32
+constexpr uint8_t CFG_PIN_LDR_BOTTOM = 33; // KS0530 A3 -> GPIO 33
 
 // Dual-Axis Servos (ESP32Servo PWM pins)
 constexpr uint8_t CFG_PIN_SERVO_PAN        = 18; // Horizontal / Azimuth Servo (LR)

@@ -6,7 +6,7 @@ COPY pubspec.yaml ./
 RUN flutter pub get
 
 COPY . .
-ARG API_BASE_URL=http://localhost:8000
+ARG API_BASE_URL=https://backend-production-72d29ca0.up.railway.app
 RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
 
 # Stage 2: Serve static web assets with Nginx

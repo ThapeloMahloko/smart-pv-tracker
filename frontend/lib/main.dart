@@ -477,6 +477,10 @@ class _ManualOverrideTabState extends State<ManualOverrideTab> {
       if (latest != null && mounted) {
         setState(() {
           _telemetry = latest;
+          if (latest.localHold || latest.currentMode == 'AUTO') {
+            _overrideCountdownTimer?.cancel();
+            _remainingOverrideSeconds = 0;
+          }
         });
       }
     } catch (_) {
@@ -585,6 +589,22 @@ class _ManualOverrideTabState extends State<ManualOverrideTab> {
           ),
           const SizedBox(height: 12),
 
+          _TelemetryMetricCard(
+            icon: Icons.battery_std_rounded,
+            iconColor: const Color(0xFF22C55E),
+            label: 'Battery voltage',
+            value: _telemetry.batteryVoltage == null
+                ? 'Unavailable'
+                : '${_telemetry.batteryVoltage!.toStringAsFixed(2)} V',
+            subtitle: '18650 battery — not solar panel power',
+          ),
+          if (_telemetry.localHold)
+            const Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: Text('Physical button held: servos centred. Release D2 to resume tracking.'),
+            ),
+          const SizedBox(height: 12),
+
           // Servo orientation & mode status bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -611,7 +631,7 @@ class _ManualOverrideTabState extends State<ManualOverrideTab> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Mode: ${_isManualActive ? "MANUAL" : _telemetry.currentMode}',
+                      'Mode: ${_telemetry.localHold ? "HOLD" : _telemetry.currentMode}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
@@ -645,7 +665,7 @@ class _ManualOverrideTabState extends State<ManualOverrideTab> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: _isSendingCommand
+              onPressed: _isSendingCommand || _telemetry.localHold
                   ? null
                   : () => _triggerOverrideCommand('TAKE_CONTROL'),
               icon: const Icon(Icons.bolt_rounded),
@@ -691,7 +711,7 @@ class _ManualOverrideTabState extends State<ManualOverrideTab> {
                 _DPadButton(
                   icon: Icons.keyboard_arrow_up_rounded,
                   label: 'UP',
-                  enabled: !_isSendingCommand,
+                  enabled: !_isSendingCommand && !_telemetry.localHold,
                   onPressed: () => _triggerOverrideCommand('UP'),
                 ),
                 const SizedBox(height: 10),
@@ -703,7 +723,7 @@ class _ManualOverrideTabState extends State<ManualOverrideTab> {
                     _DPadButton(
                       icon: Icons.keyboard_arrow_left_rounded,
                       label: 'LEFT',
-                      enabled: !_isSendingCommand,
+                      enabled: !_isSendingCommand && !_telemetry.localHold,
                       onPressed: () => _triggerOverrideCommand('LEFT'),
                     ),
                     Container(
@@ -732,7 +752,7 @@ class _ManualOverrideTabState extends State<ManualOverrideTab> {
                     _DPadButton(
                       icon: Icons.keyboard_arrow_right_rounded,
                       label: 'RIGHT',
-                      enabled: !_isSendingCommand,
+                      enabled: !_isSendingCommand && !_telemetry.localHold,
                       onPressed: () => _triggerOverrideCommand('RIGHT'),
                     ),
                   ],
@@ -743,7 +763,7 @@ class _ManualOverrideTabState extends State<ManualOverrideTab> {
                 _DPadButton(
                   icon: Icons.keyboard_arrow_down_rounded,
                   label: 'DOWN',
-                  enabled: !_isSendingCommand,
+                  enabled: !_isSendingCommand && !_telemetry.localHold,
                   onPressed: () => _triggerOverrideCommand('DOWN'),
                 ),
               ],

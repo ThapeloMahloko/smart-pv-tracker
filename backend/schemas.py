@@ -1,20 +1,22 @@
 from datetime import datetime
 from typing import Literal, Optional
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 
 class TelemetryPayload(BaseModel):
     """Schema for incoming MQTT telemetry JSON and outgoing API responses."""
 
-    ldr_tl: int = Field(..., alias="ldr_top_left", ge=0, le=4095)
-    ldr_tr: int = Field(..., alias="ldr_top_right", ge=0, le=4095)
-    ldr_bl: int = Field(..., alias="ldr_bottom_left", ge=0, le=4095)
-    ldr_br: int = Field(..., alias="ldr_bottom_right", ge=0, le=4095)
+    ldr_right: int = Field(..., validation_alias=AliasChoices("ldr_right", "ldr_top_left", "ldr_tl"), ge=0, le=4095)
+    ldr_left: int = Field(..., validation_alias=AliasChoices("ldr_left", "ldr_top_right", "ldr_tr"), ge=0, le=4095)
+    ldr_top: int = Field(..., validation_alias=AliasChoices("ldr_top", "ldr_bottom_left", "ldr_bl"), ge=0, le=4095)
+    ldr_bottom: int = Field(..., validation_alias=AliasChoices("ldr_bottom", "ldr_bottom_right", "ldr_br"), ge=0, le=4095)
     pan: int = Field(..., alias="servo_pan", ge=0, le=180)
     tilt: int = Field(..., alias="servo_tilt", ge=0, le=180)
     temperature: float
     humidity: float
     lux: float = Field(..., ge=0.0)
+    battery_voltage: Optional[float] = Field(default=None, ge=0, le=6.6)
+    local_hold: bool = False
     current_mode: Literal["AUTO", "MANUAL"] = "AUTO"
     timestamp: Optional[datetime] = None
 

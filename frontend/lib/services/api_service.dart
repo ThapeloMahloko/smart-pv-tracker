@@ -5,6 +5,8 @@ class TelemetryData {
   final double temperature;
   final double humidity;
   final double lux;
+  final double? batteryVoltage;
+  final bool localHold;
   final int pan;
   final int tilt;
   final String currentMode;
@@ -13,6 +15,8 @@ class TelemetryData {
     required this.temperature,
     required this.humidity,
     required this.lux,
+    this.batteryVoltage,
+    this.localHold = false,
     required this.pan,
     required this.tilt,
     required this.currentMode,
@@ -22,6 +26,8 @@ class TelemetryData {
     return TelemetryData(
       temperature: (json['temperature'] as num?)?.toDouble() ?? 0.0,
       humidity: (json['humidity'] as num?)?.toDouble() ?? 0.0,
+      batteryVoltage: (json['battery_voltage'] as num?)?.toDouble(),
+      localHold: json['local_hold'] == true,
       lux: (json['lux'] as num?)?.toDouble() ?? 0.0,
       pan: (json['servo_pan'] ?? json['pan'] ?? 90) as int,
       tilt: (json['servo_tilt'] ?? json['tilt'] ?? 90) as int,
@@ -43,7 +49,7 @@ class SolarApiService {
   SolarApiService({
     this.baseUrl = const String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue: 'http://localhost:8000',
+      defaultValue: 'https://backend-production-72d29ca0.up.railway.app',
     ),
   });
 

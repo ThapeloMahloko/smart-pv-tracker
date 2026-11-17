@@ -12,6 +12,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from database import Base, engine, get_db
+from migrations import upgrade_telemetry
 from models import SolarTelemetry
 from mqtt_client import TOPIC_COMMAND, mqtt_manager
 from schemas import (
@@ -34,9 +35,11 @@ async def lifespan(app: FastAPI):
     """Initialize PostgreSQL tables and manage the background MQTT loop lifecycle."""
     try:
         Base.metadata.create_all(bind=engine)
+        upgrade_telemetry(engine)
         logger.info("PostgreSQL tables verified/created.")
     except Exception as exc:
-        logger.warning("Could not initialize PostgreSQL tables at startup: %s", exc)
+        logger.error("Could not initialize or upgrade PostgreSQL tables: %s", exc)
+        raise
 
     mqtt_manager.start()
     yield
@@ -81,13 +84,15 @@ def build_cut_system_prompt(latest: Optional[SolarTelemetry]) -> str:
         telemetry_context = (
             f"- Timestamp (UTC): {latest.timestamp.isoformat()}\n"
             f"- Operating Mode: {latest.current_mode.value}\n"
+            f"- Battery voltage (not panel voltage or power): {latest.battery_voltage if latest.battery_voltage is not None else 'unavailable'} V\n"
+            f"- Physical button hold: {latest.local_hold}\n"
             f"- Light Intensity (BH1750): {latest.lux:.1f} lx\n"
             f"- Ambient Temperature (DHT11): {latest.temperature:.1f} °C\n"
             f"- Relative Humidity (DHT11): {latest.humidity:.1f} %\n"
             f"- Servo Angles: Pan (Azimuth) = {latest.servo_pan}°, Tilt (Elevation) = {latest.servo_tilt}°\n"
-            f"- 4x LDR Quadrant Readings (0-4095): "
-            f"TL={latest.ldr_top_left}, TR={latest.ldr_top_right}, "
-            f"BL={latest.ldr_bottom_left}, BR={latest.ldr_bottom_right}"
+            f"- 4x LDR Readings (LCD reference) (0-4095): "
+            f"Right={latest.ldr_right}, Left={latest.ldr_left}, "
+            f"Top={latest.ldr_top}, Bottom={latest.ldr_bottom}"
         )
     else:
         telemetry_context = (

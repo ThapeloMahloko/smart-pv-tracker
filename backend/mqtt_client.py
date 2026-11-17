@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import paho.mqtt.client as mqtt
 from database import SessionLocal
@@ -48,21 +49,29 @@ class SolarMQTTManager:
             payload_str = msg.payload.decode("utf-8")
             data = json.loads(payload_str)
 
+            battery_voltage = data.get("battery_voltage")
+            if battery_voltage is not None:
+                battery_voltage = float(battery_voltage)
+                if not math.isfinite(battery_voltage) or not 0 <= battery_voltage <= 6.6:
+                    raise ValueError("battery_voltage must be finite and between 0 and 6.6 V")
+
             mode_raw = str(data.get("current_mode", data.get("mode", "AUTO"))).upper()
             current_mode = (
                 TrackerMode.MANUAL if mode_raw == "MANUAL" else TrackerMode.AUTO
             )
 
             record = SolarTelemetry(
-                ldr_top_left=int(data.get("ldr_top_left", data.get("ldr_tl", 0))),
-                ldr_top_right=int(data.get("ldr_top_right", data.get("ldr_tr", 0))),
-                ldr_bottom_left=int(data.get("ldr_bottom_left", data.get("ldr_bl", 0))),
-                ldr_bottom_right=int(data.get("ldr_bottom_right", data.get("ldr_br", 0))),
+                ldr_right=int(data.get("ldr_right", data.get("ldr_top_left", data.get("ldr_tl", 0)))),
+                ldr_left=int(data.get("ldr_left", data.get("ldr_top_right", data.get("ldr_tr", 0)))),
+                ldr_top=int(data.get("ldr_top", data.get("ldr_bottom_left", data.get("ldr_bl", 0)))),
+                ldr_bottom=int(data.get("ldr_bottom", data.get("ldr_bottom_right", data.get("ldr_br", 0)))),
                 servo_pan=int(data.get("servo_pan", data.get("pan", 90))),
                 servo_tilt=int(data.get("servo_tilt", data.get("tilt", 90))),
                 temperature=float(data.get("temperature", data.get("temp", 0.0))),
                 humidity=float(data.get("humidity", data.get("hum", 0.0))),
                 lux=float(data.get("lux", 0.0)),
+                battery_voltage=battery_voltage,
+                local_hold=data.get("local_hold") is True,
                 current_mode=current_mode,
             )
 
