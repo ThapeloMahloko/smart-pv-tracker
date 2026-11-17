@@ -147,7 +147,7 @@ def chat_with_guide(request: ChatRequest, db: Session = Depends(get_db)):
 
     system_instruction = build_cut_system_prompt(latest)
 
-    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    model_name = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 
     try:
         client = genai.Client(api_key=api_key)
