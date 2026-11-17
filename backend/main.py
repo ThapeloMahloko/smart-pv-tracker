@@ -147,8 +147,14 @@ def chat_with_guide(request: ChatRequest, db: Session = Depends(get_db)):
 
     system_instruction = build_cut_system_prompt(latest)
 
-    primary_model = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
-    candidate_models = [primary_model, "gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-flash"]
+    primary_model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+    candidate_models = [
+        primary_model,
+        "gemini-3.5-flash-lite",
+        "gemini-3.5-flash",
+        "gemini-3.8-flash",
+        "gemini-3.1-flash-lite",
+    ]
     # Remove duplicates while preserving order
     models_to_try = list(dict.fromkeys(candidate_models))
 
