@@ -2,19 +2,20 @@ import json
 import logging
 import math
 import os
+from uuid import uuid4
 import paho.mqtt.client as mqtt
 from database import SessionLocal
 from models import SolarTelemetry, TrackerMode
 
 logger = logging.getLogger("cut_solar.mqtt")
 
-MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
+MQTT_BROKER = os.getenv("MQTT_BROKER", "broker.hivemq.com")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_USERNAME = os.getenv("MQTT_USERNAME", "")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
 
-TOPIC_TELEMETRY = "solar/telemetry"
-TOPIC_COMMAND = "solar/command"
+TOPIC_TELEMETRY = os.getenv("MQTT_TOPIC_TELEMETRY", "cut-solar/b774380d864e/telemetry")
+TOPIC_COMMAND = os.getenv("MQTT_TOPIC_COMMAND", "cut-solar/b774380d864e/command")
 
 
 class SolarMQTTManager:
@@ -23,7 +24,7 @@ class SolarMQTTManager:
     def __init__(self) -> None:
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            client_id="cut-solar-fastapi-backend",
+            client_id=os.getenv("MQTT_CLIENT_ID", "cut-backend-" + uuid4().hex[:12]),
         )
         if MQTT_USERNAME:
             self.client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
@@ -36,7 +37,9 @@ class SolarMQTTManager:
         if reason_code == 0:
             logger.info("Connected to MQTT Broker at %s:%s", MQTT_BROKER, MQTT_PORT)
             client.subscribe(TOPIC_TELEMETRY, qos=1)
-            logger.info("Subscribed to topic: %s", TOPIC_TELEMETRY)
+            client.subscribe("solar/telemetry", qos=1)
+            client.subscribe("cut-solar/+/telemetry", qos=1)
+            logger.info("Subscribed to telemetry topics: %s, solar/telemetry, cut-solar/+/telemetry", TOPIC_TELEMETRY)
         else:
             logger.error("MQTT connection failed with reason code: %s", reason_code)
 
